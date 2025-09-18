@@ -14,7 +14,7 @@
   </header>
 
   <!-- Gallery -->
-  <div class="gallery">
+  <div id="masonry" class="gallery">
     <img src="foto1.jpg" alt="Foto 1">
     <img src="foto2.jpg" alt="Foto 2">
     <img src="foto3.jpg" alt="Foto 3">
@@ -23,8 +23,43 @@
     <img src="foto5.jpg" alt="Foto 5">
   </div>
 
-  <!-- Script untuk auto play dan mode malam -->
+  <!-- Script Masonry + Acak Urutan -->
   <script>
+    // Masonry Layout
+    function masonryLayout(container) {
+      const items = Array.from(container.children);
+      const cols = Math.max(2, Math.floor(container.offsetWidth / 180));
+      const heights = Array(cols).fill(0);
+
+      items.forEach(item => {
+        const minIndex = heights.indexOf(Math.min(heights));
+        item.style.position = 'absolute';
+        item.style.left = `${(container.offsetWidth / cols) * minIndex}px`;
+        item.style.top = `${heights[minIndex]}px`;
+        heights[minIndex] += item.offsetHeight;
+      });
+
+      container.style.height = `${Math.max(...heights)}px`;
+    }
+
+    const gallery = document.getElementById('masonry');
+
+    // Acak Urutan Karya
+    function shuffleItems(container) {
+      const items = Array.from(container.children);
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        container.appendChild(items[j]);
+      }
+    }
+
+    // Jalankan saat halaman direfresh
+    window.addEventListener('load', () => {
+      shuffleItems(gallery);
+      masonryLayout(gallery);
+      window.addEventListener('resize', () => masonryLayout(gallery));
+    });
+
     // Auto Play Video saat di tengah layar
     const videos = document.querySelectorAll("video");
 

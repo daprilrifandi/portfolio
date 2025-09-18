@@ -1,7 +1,9 @@
+/* Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  position: relative;
 }
 
 body {
@@ -36,9 +38,9 @@ header p {
 
 /* Gallery */
 .gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
 }
 
 /* Item Hover Animation */
@@ -50,6 +52,8 @@ header p {
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: block;
+  margin-bottom: 15px;
 }
 
 .gallery img:hover,
