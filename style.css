@@ -9,7 +9,7 @@ body {
   font-family: Arial, sans-serif;
   background-color: #f9f9f9;
   color: #333;
-  padding: 40px 20px;
+  padding: 20px;
 }
 
 /* Header */
@@ -24,47 +24,48 @@ header h1 {
 }
 
 header p {
-  font-size: 1.1rem;
-  margin-top: 10px;
-  color: #666;
+  font-size: 1rem;
+  margin-top: 8px;
 }
 
-/* Gallery (Pinterest Style) */
+/* Gallery Masonry */
 .gallery {
-  column-count: 3;       /* default 3 kolom */
-  column-gap: 15px;      /* jarak antar kolom */
-  width: 100%;
-  margin: 0 auto;
+  column-count: 4;
+  column-gap: 16px;
 }
 
 .gallery img,
 .gallery video {
   width: 100%;
-  height: auto;
   border-radius: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   display: block;
-  break-inside: avoid;   /* biar item tidak terpotong */
+  break-inside: avoid;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Hover Effect */
 .gallery img:hover,
 .gallery video:hover {
   transform: scale(1.03);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
+/* Responsiveness */
+@media (max-width: 1200px) {
+  .gallery {
+    column-count: 3;
+  }
+}
+
+@media (max-width: 768px) {
   .gallery {
     column-count: 2;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
   .gallery {
-    column-count: 2;
+    column-count: 1;
   }
 }
