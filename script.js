@@ -1,4 +1,4 @@
-// Fungsi acak urutan anak elemen di gallery
+// Acak urutan galeri
 function shuffleGallery() {
   const gallery = document.getElementById("gallery");
   const items = Array.from(gallery.children);
@@ -36,12 +36,11 @@ function setupAutoplayOnScroll() {
         entry.target.pause();
       }
     });
-  }, { threshold: 0.4 });
+  }, { threshold: 0.5 });
 
   videos.forEach(video => observer.observe(video));
 }
 
-// Jalankan semua fungsi setelah halaman load
 window.addEventListener("load", () => {
   shuffleGallery();
   setupVideoPause();

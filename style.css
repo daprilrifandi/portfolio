@@ -43,6 +43,7 @@ header p {
   break-inside: avoid;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: #000; /* biar frame video nggak transparan */
 }
 
 .gallery img:hover,
@@ -60,12 +61,12 @@ header p {
 
 @media (max-width: 768px) {
   .gallery {
-    column-count: 2;
+    column-count: 2; /* tetap 2 kolom di HP */
   }
 }
 
 @media (max-width: 480px) {
   .gallery {
-    column-count: 1;
+    column-count: 2; /* tetap pakai 2 kolom di layar kecil */
   }
 }
