@@ -24,49 +24,49 @@ header h1 {
 }
 
 header p {
-  font-size: 1rem;
-  margin-top: 8px;
+  font-size: 1.1rem;
+  margin-top: 10px;
 }
 
-/* Gallery Masonry */
+/* Gallery (Pinterest-style Masonry) */
 .gallery {
-  column-count: 4;
+  column-count: 2;       /* Default: 2 kolom */
   column-gap: 16px;
 }
 
-.gallery img,
-.gallery video {
-  width: 100%;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  display: block;
+@media (min-width: 768px) {
+  .gallery {
+    column-count: 3;     /* Tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery {
+    column-count: 4;     /* Desktop */
+  }
+}
+
+/* Item */
+.item {
   break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+/* Gambar & Video */
+.item img,
+.item video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  object-fit: cover;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background: #000; /* biar frame video nggak transparan */
 }
 
-.gallery img:hover,
-.gallery video:hover {
+/* Hover effect */
+.item img:hover,
+.item video:hover {
   transform: scale(1.03);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-
-/* Responsiveness */
-@media (max-width: 1200px) {
-  .gallery {
-    column-count: 3;
-  }
-}
-
-@media (max-width: 768px) {
-  .gallery {
-    column-count: 2; /* tetap 2 kolom di HP */
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery {
-    column-count: 2; /* tetap pakai 2 kolom di layar kecil */
-  }
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
