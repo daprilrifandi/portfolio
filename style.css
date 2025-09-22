@@ -1,59 +1,51 @@
-/* Reset dasar */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-/* Body & header */
 body {
   font-family: Arial, sans-serif;
   background: #f9f9f9;
-  color: #222;
-  padding: 36px 20px;
-  transition: background-color .25s, color .25s;
+  color: #333;
+  padding: 20px;
 }
-body.dark-mode { background:#0f1113; color:#e6e6e6; }
 
-header { text-align:center; margin-bottom:28px; }
-header h1 { font-size:2rem; font-weight:700; }
-header p { margin-top:8px; color: #555; }
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-/* Masonry menggunakan CSS columns */
 .gallery {
-  column-count: 4;       /* desktop default */
-  column-gap: 16px;
-  width: min(1200px, 100%);
-  margin: 0 auto;
-  padding-bottom: 40px;  /* ruang bawah */
+  column-count: 3; /* Jumlah kolom default */
+  column-gap: 15px;
 }
 
-/* Item gaya agar rapi di columns */
-.gallery-item {
-  display: inline-block;     /* penting agar break-inside bekerja */
-  width: 100%;
-  margin: 0 0 16px;
-  border-radius: 10px;
-  object-fit: cover;
-  break-inside: avoid;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  transition: transform .28s ease, box-shadow .28s ease, filter .28s ease;
-  background: #efefef; /* sementara saat loading */
-}
-
-/* Video styling */
-.gallery-item[type="video"], .gallery video { width:100%; height:auto; }
-
-/* Efek "fokus" ketika item terlihat > threshold */
-.gallery-item.in-view {
-  transform: scale(1.03);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
-  filter: saturate(1.02);
-}
-
-/* Responsif — menurunkan jumlah kolom */
-@media (max-width: 1200px) { .gallery { column-count: 3; } }
-@media (max-width: 800px)  { .gallery { column-count: 2; } }
-@media (max-width: 480px)  { .gallery { column-count: 1; } }
-
-/* kecilkan video controls agar rapi (browser dependant) */
+.gallery img,
 .gallery video {
-  border-radius: 8px;
+  width: 100%;
+  margin-bottom: 15px;
+  border-radius: 10px;
   display: block;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery img:hover,
+.gallery video:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Responsif */
+@media (max-width: 1024px) {
+  .gallery {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .gallery {
+    column-count: 1;
+  }
 }
