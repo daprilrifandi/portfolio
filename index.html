@@ -37,6 +37,8 @@
         item.style.left = `${(container.offsetWidth / cols) * minIndex}px`;
         item.style.top = `${heights[minIndex]}px`;
         heights[minIndex] += item.offsetHeight;
+        item.style.opacity = "1";
+        item.classList.add("loaded");
       });
 
       container.style.height = `${Math.max(...heights)}px`;

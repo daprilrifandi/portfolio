@@ -41,6 +41,7 @@ header p {
   position: relative;
   width: 100%;
   margin: 0 auto;
+  height: 0; /* Agar tidak tumpuk sebelum Masonry berjalan */
 }
 
 /* Item Hover Animation */
@@ -54,6 +55,14 @@ header p {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: block;
   margin-bottom: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  aspect-ratio: 3 / 4;
+}
+
+.gallery img.loaded,
+.gallery video.loaded {
+  opacity: 1;
 }
 
 .gallery img:hover,
