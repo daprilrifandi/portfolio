@@ -79,8 +79,6 @@ header p {
   border-radius: 10px;
   object-fit: cover;
   display: block;
-  muted;
-  playsinline;
 }
 
 /* Responsive Grid */
