@@ -65,6 +65,6 @@ header p {
 
 @media (max-width: 600px) {
   .gallery {
-    column-count: 2;   /* tetap 2 kolom di hp */
+    column-count: 2;
   }
 }
