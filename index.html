@@ -1,91 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Portofolio Rifandi Dapril</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Header -->
   <header>
     <h1>Portofolio Rifandi Dapril</h1>
     <p>Selamat datang di portofolio saya</p>
   </header>
 
-  <!-- Gallery -->
-  <div id="masonry" class="gallery">
-    <img src="foto1.jpg" alt="Foto 1">
-    <img src="foto2.jpg" alt="Foto 2">
-    <img src="foto3.jpg" alt="Foto 3">
-    <video src="video11.mp4" muted playsinline controls></video>
-    <img src="foto4.jpg" alt="Foto 4">
-    <img src="foto5.jpg" alt="Foto 5">
-  </div>
+  <main>
+    <div class="gallery" id="gallery">
+      <!-- Contoh item: ganti path sesuai file di folder images/ dan videos/ -->
+      <img class="gallery-item" loading="lazy" src="images/foto1.jpg" alt="foto1" />
+      <img class="gallery-item" loading="lazy" src="images/foto2.jpg" alt="foto2" />
+      <img class="gallery-item" loading="lazy" src="images/foto3.jpg" alt="foto3" />
+      <video class="gallery-item" src="videos/video1.mp4" muted playsinline preload="metadata"></video>
+      <img class="gallery-item" loading="lazy" src="images/foto4.jpg" alt="foto4" />
+      <img class="gallery-item" loading="lazy" src="images/foto5.jpg" alt="foto5" />
+    </div>
+  </main>
 
-  <!-- Script Masonry + Acak Urutan -->
-  <script>
-    // Masonry Layout
-    function masonryLayout(container) {
-      const items = Array.from(container.children);
-      const cols = Math.max(2, Math.floor(container.offsetWidth / 180));
-      const heights = Array(cols).fill(0);
-
-      items.forEach(item => {
-        const minIndex = heights.indexOf(Math.min(heights));
-        item.style.position = 'absolute';
-        item.style.left = `${(container.offsetWidth / cols) * minIndex}px`;
-        item.style.top = `${heights[minIndex]}px`;
-        heights[minIndex] += item.offsetHeight;
-        item.style.opacity = "1";
-        item.classList.add("loaded");
-      });
-
-      container.style.height = `${Math.max(...heights)}px`;
-    }
-
-    const gallery = document.getElementById('masonry');
-
-    // Acak Urutan Karya
-    function shuffleItems(container) {
-      const items = Array.from(container.children);
-      for (let i = items.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        container.appendChild(items[j]);
-      }
-    }
-
-    // Jalankan saat halaman direfresh
-    window.addEventListener('load', () => {
-      shuffleItems(gallery);
-      masonryLayout(gallery);
-      window.addEventListener('resize', () => masonryLayout(gallery));
-    });
-
-    // Auto Play Video saat di tengah layar
-    const videos = document.querySelectorAll("video");
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.play();
-        } else {
-          entry.target.pause();
-        }
-      });
-    }, { threshold: 0.4 });
-
-    videos.forEach(video => {
-      observer.observe(video);
-    });
-
-    // Mode Malam Otomatis
-    const body = document.body;
-    const now = new Date();
-    const hour = now.getHours();
-    if (hour >= 18 || hour < 6) {
-      body.classList.add("dark-mode");
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

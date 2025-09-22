@@ -1,97 +1,59 @@
-/* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  position: relative;
-}
+/* Reset dasar */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Body & header */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
-  color: #333;
-  padding: 40px 20px;
-  transition: background-color 0.3s, color 0.3s;
+  background: #f9f9f9;
+  color: #222;
+  padding: 36px 20px;
+  transition: background-color .25s, color .25s;
 }
+body.dark-mode { background:#0f1113; color:#e6e6e6; }
 
-/* Mode Malam */
-body.dark-mode {
-  background-color: #121212;
-  color: #e0e0e0;
-}
+header { text-align:center; margin-bottom:28px; }
+header h1 { font-size:2rem; font-weight:700; }
+header p { margin-top:8px; color: #555; }
 
-/* Header */
-header {
-  text-align: center;
-  margin-bottom: 60px;
-}
-
-header h1 {
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-header p {
-  font-size: 1.1rem;
-  margin-top: 10px;
-}
-
-/* Gallery */
+/* Masonry menggunakan CSS columns */
 .gallery {
-  position: relative;
-  width: 100%;
+  column-count: 4;       /* desktop default */
+  column-gap: 16px;
+  width: min(1200px, 100%);
   margin: 0 auto;
-  height: 0; /* Sembunyikan tampilan default */
+  padding-bottom: 40px;  /* ruang bawah */
 }
 
-/* Item Gallery */
-.gallery img,
-.gallery video {
+/* Item gaya agar rapi di columns */
+.gallery-item {
+  display: inline-block;     /* penting agar break-inside bekerja */
   width: 100%;
-  height: auto;
+  margin: 0 0 16px;
   border-radius: 10px;
   object-fit: cover;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  display: block;
-  margin-bottom: 15px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  aspect-ratio: 3 / 4;
+  break-inside: avoid;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform .28s ease, box-shadow .28s ease, filter .28s ease;
+  background: #efefef; /* sementara saat loading */
 }
 
-.gallery img.loaded,
-.gallery video.loaded {
-  opacity: 1;
+/* Video styling */
+.gallery-item[type="video"], .gallery video { width:100%; height:auto; }
+
+/* Efek "fokus" ketika item terlihat > threshold */
+.gallery-item.in-view {
+  transform: scale(1.03);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  filter: saturate(1.02);
 }
 
-/* Hover Effect */
-.gallery img:hover,
-.gallery video:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
+/* Responsif — menurunkan jumlah kolom */
+@media (max-width: 1200px) { .gallery { column-count: 3; } }
+@media (max-width: 800px)  { .gallery { column-count: 2; } }
+@media (max-width: 480px)  { .gallery { column-count: 1; } }
 
-/* Video Auto Mute */
+/* kecilkan video controls agar rapi (browser dependant) */
 .gallery video {
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
-  object-fit: cover;
+  border-radius: 8px;
   display: block;
-}
-
-/* Responsive Grid */
-@media (max-width: 768px) {
-  .gallery img,
-  .gallery video {
-    aspect-ratio: 2 / 3;
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery img,
-  .gallery video {
-    aspect-ratio: 2 / 3;
-  }
 }
