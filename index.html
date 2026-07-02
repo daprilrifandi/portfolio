@@ -9,38 +9,13 @@
     header { text-align:center; padding:50px 20px 20px; }
     h1 { margin:0; font-size:2.2rem; }
     p { color:#555; }
-
-    /* INI KUNCINYA PINTEREST */
-    .gallery {
-      column-count: 4;
-      column-gap: 16px;
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-    }
-    .item {
-      break-inside: avoid;
-      margin-bottom: 16px;
-    }
-    .item img {
-      width: 100%;
-      height: auto; /* biar tinggi asli, tidak dipaksa kotak */
-      display: block;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      transition: transform 0.2s;
-    }
-    .item img:hover { transform: scale(1.02); }
-
-    /* HP & tablet otomatis */
-    @media (max-width: 900px) { .gallery { column-count: 3; } }
-    @media (max-width: 600px) { .gallery { column-count: 2; padding: 12px; } }
-
+    .gallery { column-count:4; column-gap:16px; max-width:1200px; margin:auto; padding:20px; }
+    .item { break-inside:avoid; margin-bottom:16px; }
+    .item img { width:100%; height:auto; display:block; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform .2s; }
+    .item img:hover { transform:scale(1.02); }
+    @media(max-width:900px){.gallery{column-count:3}} @media(max-width:600px){.gallery{column-count:2;padding:12px}}
     .kontak { text-align:center; padding:50px 20px; background:white; margin-top:30px; }
     .tombol-sosmed .btn { display:inline-block; margin:6px; padding:12px 20px; text-decoration:none; border-radius:10px; background:#f1f1f1; color:#000; font-weight:500; }
-    .btn.wa:hover { background:#25D366; color:white; }
-    .btn.ig:hover { background:#E1306C; color:white; }
-    .btn.email:hover { background:#333; color:white; }
   </style>
 </head>
 <body>
@@ -49,23 +24,28 @@
     <p>Selamat datang di portofolio saya</p>
   </header>
 
-  <!-- Gallery otomatis -->
   <div id="gallery" class="gallery"></div>
 
   <script>
-  // Ambil semua foto dari folder media di GitHub
   fetch('https://api.github.com/repos/daprilrifandi/portfolio/contents/media')
     .then(r => r.json())
     .then(files => {
       const g = document.getElementById('gallery');
-      files.filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name))
-           .reverse() // terbaru di atas
-           .forEach(f => {
-             const d = document.createElement('div');
-             d.className = 'item';
-             d.innerHTML = `<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${f.name}" alt="${f.name}" loading="lazy">`;
-             g.appendChild(d);
-           });
+      // ambil hanya gambar
+      let imgs = files.filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name));
+
+      // === INI KUNCINYA: ACAK SETIAP REFRESH ===
+      for (let i = imgs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [imgs[i], imgs[j]] = [imgs[j], imgs[i]];
+      }
+
+      imgs.forEach(f => {
+        const d = document.createElement('div');
+        d.className = 'item';
+        d.innerHTML = `<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${f.name}" alt="${f.name}" loading="lazy">`;
+        g.appendChild(d);
+      });
     });
   </script>
 
