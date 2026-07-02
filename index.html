@@ -5,80 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portofolio Rifandi Dapril</title>
   <link rel="stylesheet" href="style.css">
-
-  .gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
-  padding: 20px;
-  max-width: 1200px;
-  margin: auto;
-}
-.item img {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
-}
-.item img:hover {
-  transform: scale(1.03);
-}
+  <style>
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .item img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .item img:hover {
+      transform: scale(1.03);
+    }
+    .kontak { text-align: center; padding: 40px 20px; }
+    .tombol-sosmed .btn { display: inline-block; margin: 6px; padding: 10px 18px; text-decoration: none; border-radius: 8px; background: #f1f1f1; }
+  </style>
 </head>
 <body>
-  <!-- Header -->
-  <header>
+  <header style="text-align:center; padding:30px 0;">
     <h1>Portofolio Rifandi Dapril</h1>
     <p>Selamat datang di portofolio saya</p>
   </header>
 
-  <!-- Gallery -->
-  <div class="gallery">
-    
-    <!-- ========== MULAI AREA FOTO ========== -->
-    <!-- Mau HAPUS foto? Hapus 1 blok <div class="item">...</div> ini -->
-    <!-- Mau NAMBAH foto? Copy 1 blok ini, taruh di bawahnya, ganti nama file -->
-    
-   <div id="gallery" class="gallery"></div>
+  <!-- Gallery otomatis dari folder media -->
+  <div id="gallery" class="gallery"></div>
 
-<script>
-// AUTO LOAD semua foto dari folder media
-fetch('https://api.github.com/repos/daprilrifandi/portfolio/contents/media')
-  .then(r => r.json())
-  .then(files => {
-    const gallery = document.getElementById('gallery');
-    // ambil hanya gambar, urutkan terbaru dulu
-    files.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i))
-         .reverse()
-         .forEach(f => {
-            const div = document.createElement('div');
-            div.className = 'item';
-            div.innerHTML = `<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${f.name}" alt="${f.name}" loading="lazy">`;
-            gallery.appendChild(div);
-         });
-  });
-</script>
-    <!-- ========== SELESAI AREA FOTO ========== -->
-  </div>
+  <script>
+  fetch('https://api.github.com/repos/daprilrifandi/portfolio/contents/media')
+    .then(r => r.json())
+    .then(files => {
+      const gallery = document.getElementById('gallery');
+      files.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i))
+           .reverse()
+           .forEach(f => {
+              const div = document.createElement('div');
+              div.className = 'item';
+              div.innerHTML = `<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${f.name}" alt="${f.name}" loading="lazy">`;
+              gallery.appendChild(div);
+           });
+    });
+  </script>
 
-  <!-- ========== BAGIAN KONTAK & SOSMED BARU ========== -->
   <section class="kontak">
     <h2>Hubungi Saya</h2>
     <p>Tertarik kerja sama? Klik tombol di bawah ya!</p>
-    
     <div class="tombol-sosmed">
-      <!-- GANTI 6281234567890 JADI NO WA KAMU -->
       <a href="https://wa.me/6285748316870" target="_blank" class="btn wa">Chat WhatsApp</a>
-      
-      <!-- GANTI usernamekamu JADI USERNAME IG KAMU -->
       <a href="https://instagram.com/omkumisjahat" target="_blank" class="btn ig">Follow Instagram</a>
-      
-      <!-- GANTI emailkamu@gmail.com JADI EMAIL KAMU -->
       <a href="mailto:daprilrifandi@gmail.com" class="btn email">Kirim Email</a>
     </div>
   </section>
-
-  <script src="script.js"></script>
 </body>
 </html>
