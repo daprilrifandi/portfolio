@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><title>Admin Rahasia</title></head>
+<body>
+<script>
+// GANTI password ini sesukamu! Ini kuncinya
+if (!location.search.includes("kunci=rifandi123")) {
+  document.body.innerHTML = "<h1>404 Not Found</h1>";
+  throw new Error("stop");
+}
+</script>
+
+<h2>Upload Foto Portfolio</h2>
+<p>Hanya kamu yang tau link ini.</p>
+<input type="file" id="file" accept="image/*">
+<button onclick="upload()">Upload</button>
+<div id="status"></div>
+
+<script>
+async function upload(){
+  const fileInput = document.getElementById('file');
+  if(!fileInput.files[0]) return alert('Pilih foto dulu');
+
+  // Minta token sekali, simpan di browser kamu aja
+  let token = localStorage.getItem('gh_pat');
+  if(!token){
+    token = prompt('Tempel Personal Access Token kamu (sekali aja):');
+    localStorage.setItem('gh_pat', token);
+  }
+
+  const file = fileInput.files[0];
+  const namaFile = 'foto' + Date.now() + '.jpg'; // auto jadi foto123456.jpg
+
+  document.getElementById('status').innerText = 'Uploading...';
+
+  // baca file jadi base64
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(',')[1];
+
+    const res = await fetch(`https://api.github.com/repos/daprilrifandi/portfolio/contents/media/${namaFile}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'upload via admin: ' + namaFile,
+        content: base64
+      })
+    });
+
+    if(res.ok){
+      document.getElementById('status').innerHTML =
+        `✅ Berhasil upload!<br>Nama file: <b>${namaFile}</b><br><br>Step terakhir: copy nama ini, buka index.html, tambahin 1 baris seperti foto7.`;
+    } else {
+      document.getElementById('status').innerText = 'Gagal. Cek token.';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
