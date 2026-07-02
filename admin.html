@@ -1,46 +1,43 @@
-<!DOCTYPE html>
-<html lang="id"><head><meta charset="UTF-8"><title>Admin V2</title>
-<style>body{font-family:sans-serif;max-width:800px;margin:20px} .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px} .card{border:1px solid #ccc;padding:5px;text-align:center} img{width:100%;height:120px;object-fit:cover} button{margin:3px}</style>
-</head><body>
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Admin Rahasia</title></head><body>
 <script>if(!location.search.includes("kunci=rifandi123")){document.body.innerHTML="<h1>404</h1>";throw 0}</script>
 
-<h2>Admin Portfolio V2</h2>
-<input type="file" id="file" accept="image/*"> <button onclick="upload()">Upload</button>
-<p id="status"></p>
-<hr>
-<h3>Foto yang ada (klik Delete untuk hapus)</h3>
-<div id="list" class="grid"></div>
+<h2>Upload Foto</h2>
+<input type="file" id="f" accept="image/*"> <button onclick="up()">Upload</button>
+<div id="s"></div>
+
+<hr><h2>Daftar Foto (klik hapus)</h2>
+<div id="list">Loading...</div>
 
 <script>
-const owner='daprilrifandi', repo='portfolio';
-let token = localStorage.getItem('gh_pat') || prompt('Tempel PAT sekali:'); localStorage.setItem('gh_pat',token);
+const owner='daprilrifandi', repo='portfolio', path='media';
+let token = localStorage.getItem('gh_pat') || prompt('Tempel PAT kamu:'); localStorage.setItem('gh_pat',token);
 
-async function api(path, opt={}){ 
-  return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {...opt, headers:{Authorization:'Bearer '+token, 'Content-Type':'application/json', ...(opt.headers||{})}});
-}
-
-async function load(){
-  const res = await api('media'); const files = await res.json();
-  document.getElementById('list').innerHTML = files.filter(f=>f.name.match(/\.(jpg|png|webp)$/i)).reverse().map(f=>`
-    <div class="card">
-      <img src="https://raw.githubusercontent.com/${owner}/${repo}/main/media/${f.name}">
-      <div>${f.name}</div>
-      <button onclick="hapus('${f.path}','${f.sha}')">Delete</button>
-    </div>`).join('');
-}
-async function upload(){
-  const f=document.getElementById('file').files[0]; if(!f)return alert('pilih file');
-  document.getElementById('status').innerText='Uploading...';
-  const b64 = await f.arrayBuffer().then(b=>btoa(String.fromCharCode(...new Uint8Array(b))));
+async function up(){
+  const file=document.getElementById('f').files[0]; if(!file)return alert('pilih file');
+  document.getElementById('s').innerText='Uploading...';
+  const b64 = await file.arrayBuffer().then(b=>btoa(String.fromCharCode(...new Uint8Array(b))));
   const nama='foto'+Date.now()+'.jpg';
-  await api(`media/${nama}`, {method:'PUT', body:JSON.stringify({message:'upload '+nama, content:b64})});
-  document.getElementById('status').innerText='✅ Berhasil!'; load();
+  await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/${nama}`,{
+    method:'PUT', headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({message:'upload '+nama, content:b64})
+  });
+  document.getElementById('s').innerText='✅ Upload selesai!'; loadList();
 }
-async function hapus(path,sha){
+
+async function loadList(){
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}});
+  const files = await res.json();
+  document.getElementById('list').innerHTML = files.filter(f=>f.name.endsWith('.jpg')).map(f=>
+    `<div>${f.name} <button onclick="del('${f.path}','${f.sha}')">Hapus</button></div>`
+  ).join('');
+}
+async function del(path,sha){
   if(!confirm('Yakin hapus?'))return;
-  await api(path, {method:'DELETE', body:JSON.stringify({message:'delete '+path, sha})});
-  load();
+  await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
+    method:'DELETE', headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({message:'delete '+path, sha})
+  });
+  loadList();
 }
-load();
-</script>
-</body></html>
+loadList();
+</script></body></html>
