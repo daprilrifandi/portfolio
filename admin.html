@@ -1,64 +1,46 @@
 <!DOCTYPE html>
-<html lang="id">
-<head><meta charset="UTF-8"><title>Admin Rahasia</title></head>
-<body>
+<html lang="id"><head><meta charset="UTF-8"><title>Admin V2</title>
+<style>body{font-family:sans-serif;max-width:800px;margin:20px} .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px} .card{border:1px solid #ccc;padding:5px;text-align:center} img{width:100%;height:120px;object-fit:cover} button{margin:3px}</style>
+</head><body>
+<script>if(!location.search.includes("kunci=rifandi123")){document.body.innerHTML="<h1>404</h1>";throw 0}</script>
+
+<h2>Admin Portfolio V2</h2>
+<input type="file" id="file" accept="image/*"> <button onclick="upload()">Upload</button>
+<p id="status"></p>
+<hr>
+<h3>Foto yang ada (klik Delete untuk hapus)</h3>
+<div id="list" class="grid"></div>
+
 <script>
-// GANTI password ini sesukamu! Ini kuncinya
-if (!location.search.includes("kunci=rifandi123")) {
-  document.body.innerHTML = "<h1>404 Not Found</h1>";
-  throw new Error("stop");
+const owner='daprilrifandi', repo='portfolio';
+let token = localStorage.getItem('gh_pat') || prompt('Tempel PAT sekali:'); localStorage.setItem('gh_pat',token);
+
+async function api(path, opt={}){ 
+  return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {...opt, headers:{Authorization:'Bearer '+token, 'Content-Type':'application/json', ...(opt.headers||{})}});
 }
-</script>
 
-<h2>Upload Foto Portfolio</h2>
-<p>Hanya kamu yang tau link ini.</p>
-<input type="file" id="file" accept="image/*">
-<button onclick="upload()">Upload</button>
-<div id="status"></div>
-
-<script>
+async function load(){
+  const res = await api('media'); const files = await res.json();
+  document.getElementById('list').innerHTML = files.filter(f=>f.name.match(/\.(jpg|png|webp)$/i)).reverse().map(f=>`
+    <div class="card">
+      <img src="https://raw.githubusercontent.com/${owner}/${repo}/main/media/${f.name}">
+      <div>${f.name}</div>
+      <button onclick="hapus('${f.path}','${f.sha}')">Delete</button>
+    </div>`).join('');
+}
 async function upload(){
-  const fileInput = document.getElementById('file');
-  if(!fileInput.files[0]) return alert('Pilih foto dulu');
-
-  // Minta token sekali, simpan di browser kamu aja
-  let token = localStorage.getItem('gh_pat');
-  if(!token){
-    token = prompt('Tempel Personal Access Token kamu (sekali aja):');
-    localStorage.setItem('gh_pat', token);
-  }
-
-  const file = fileInput.files[0];
-  const namaFile = 'foto' + Date.now() + '.jpg'; // auto jadi foto123456.jpg
-
-  document.getElementById('status').innerText = 'Uploading...';
-
-  // baca file jadi base64
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64 = reader.result.split(',')[1];
-
-    const res = await fetch(`https://api.github.com/repos/daprilrifandi/portfolio/contents/media/${namaFile}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'upload via admin: ' + namaFile,
-        content: base64
-      })
-    });
-
-    if(res.ok){
-      document.getElementById('status').innerHTML =
-        `✅ Berhasil upload!<br>Nama file: <b>${namaFile}</b><br><br>Step terakhir: copy nama ini, buka index.html, tambahin 1 baris seperti foto7.`;
-    } else {
-      document.getElementById('status').innerText = 'Gagal. Cek token.';
-    }
-  };
-  reader.readAsDataURL(file);
+  const f=document.getElementById('file').files[0]; if(!f)return alert('pilih file');
+  document.getElementById('status').innerText='Uploading...';
+  const b64 = await f.arrayBuffer().then(b=>btoa(String.fromCharCode(...new Uint8Array(b))));
+  const nama='foto'+Date.now()+'.jpg';
+  await api(`media/${nama}`, {method:'PUT', body:JSON.stringify({message:'upload '+nama, content:b64})});
+  document.getElementById('status').innerText='✅ Berhasil!'; load();
 }
+async function hapus(path,sha){
+  if(!confirm('Yakin hapus?'))return;
+  await api(path, {method:'DELETE', body:JSON.stringify({message:'delete '+path, sha})});
+  load();
+}
+load();
 </script>
-</body>
-</html>
+</body></html>
