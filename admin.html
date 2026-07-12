@@ -1,17 +1,41 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin Rahasia</title></head><body>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin Rahasia</title>
+<style>body{font-family:sans-serif;padding:20px;max-width:700px}input[type=text]{width:320px;padding:8px}button{padding:6px 12px;margin:4px;cursor:pointer}hr{margin:24px 0}.box{background:#f7f7f7;padding:14px;border-radius:10px;margin-bottom:20px}</style>
+</head><body>
 <script>if(!location.search.includes("kunci=rifandi123")){document.body.innerHTML="<h1>404</h1>";throw 0}</script>
-<h2>Upload Foto</h2>
-<input type="file" id="f" accept="image/*"> <button onclick="up()">Upload</button>
-<div id="s" style="margin:8px 0;color:blue"></div><hr>
-<h2>Daftar Foto</h2><div id="list">Loading...</div>
+
+<div class="box">
+<h2>1. Upload Foto</h2>
+<input type="file" id="f" accept="image/*"> <button onclick="upFoto()">Upload Foto</button>
+<div id="sFoto" style="margin-top:8px"></div>
+</div>
+
+<div class="box">
+<h2>2. Tambah Video YouTube</h2>
+<p style="font-size:13px;color:#666">Paste link YouTube, contoh: <code>https://youtu.be/dQw4w9WgXcQ</code></p>
+<input type="text" id="yt" placeholder="https://www.youtube.com/watch?v=..."> <button onclick="addVideo()">Tambah Video</button>
+<div id="sVideo" style="margin-top:8px"></div>
+<div id="videoList" style="margin-top:12px"></div>
+</div>
+
+<hr>
+<h2>Daftar Foto</h2><div id="listFoto">Loading...</div>
+
 <script>
-const owner='daprilrifandi',repo='portfolio',path='media';
+const owner='daprilrifandi',repo='portfolio',base='media';
 let token=localStorage.getItem('gh_pat');if(!token){token=prompt('Tempel PAT GitHub:');localStorage.setItem('gh_pat',token)}
 const toB64=f=>new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result.split(',')[1]);rd.readAsDataURL(f)});
-async function getList(){try{const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/list.json`,{headers:{Authorization:'Bearer '+token}});if(!r.ok)return{list:[],sha:null};const j=await r.json();return{list:JSON.parse(atob(j.content)),sha:j.sha}}catch{return{list:[],sha:null}}}
-async function saveList(list,sha){const body={message:'update list',content:btoa(JSON.stringify(list))};if(sha)body.sha=sha;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/list.json`,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)})}
-async function up(){const file=document.getElementById('f').files[0];if(!file)return alert('Pilih file');const s=document.getElementById('s');try{s.innerText='Uploading...';const b64=await toB64(file);const nama='foto'+Date.now()+'.'+file.name.split('.').pop();let r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/${nama}`,{method:'PUT',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'upload '+nama,content:b64})});if(!r.ok)throw new Error((await r.json()).message);const {list,sha}=await getList();list.push(nama);await saveList(list,sha);s.innerText='✅ Berhasil! Foto baru sudah masuk list acak.';loadList()}catch(e){s.innerText='❌ '+e.message;s.style.color='red'}}
-async function loadList(){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}});const files=await r.json();document.getElementById('list').innerHTML=files.filter(f=>/\.(jpg|jpeg|png|webp)$/i.test(f.name)).map(f=>`<div>${f.name} <button onclick="del('${f.path}','${f.sha}','${f.name}')">Hapus</button></div>`).join('')}
-async function del(p,sha,name){if(!confirm('Hapus '+name+'?'))return;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}`,{method:'DELETE',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({message:'delete '+name,sha})});const {list,sha:ls}=await getList();await saveList(list.filter(x=>x!==name),ls);loadList()}
-loadList();
+async function getJson(name){try{const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}/${name}`,{headers:{Authorization:'Bearer '+token}});if(!r.ok)return{data:[],sha:null};const j=await r.json();return{data:JSON.parse(atob(j.content)),sha:j.sha}}catch{return{data:[],sha:null}}}
+async function saveJson(name,data,sha){const body={message:'update '+name,content:btoa(JSON.stringify(data))};if(sha)body.sha=sha;const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}/${name}`,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error((await r.json()).message)}
+function getYTId(url){const m=url.match(/(?:youtu\.be\/|v=|\/embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);return m?m[1]: (url.length===11?url:null)}
+
+// FOTO
+async function upFoto(){const file=document.getElementById('f').files[0];if(!file)return alert('pilih foto');const s=document.getElementById('sFoto');try{s.innerText='Uploading...';const b64=await toB64(file);const nama='foto'+Date.now()+'.'+file.name.split('.').pop();let r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}/${nama}`,{method:'PUT',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'upload '+nama,content:b64})});if(!r.ok)throw new Error((await r.json()).message);const {data,sha}=await getJson('list.json');data.push(nama);await saveJson('list.json',data,sha);s.innerText='✅ Foto masuk & ikut keacak!';loadFoto()}catch(e){s.innerText='❌ '+e.message}}
+async function loadFoto(){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}`,{headers:{Authorization:'Bearer '+token}});const files=await r.json();document.getElementById('listFoto').innerHTML=files.filter(f=>/\.(jpg|jpeg|png|webp)$/i.test(f.name)).map(f=>`${f.name} <button onclick="delFoto('${f.path}','${f.sha}','${f.name}')">Hapus</button>`).join('<br>')}
+async function delFoto(p,sha,name){if(!confirm('Hapus?'))return;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}`,{method:'DELETE',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'del '+name,sha})});const {data,sha:ls}=await getJson('list.json');await saveJson('list.json',data.filter(x=>x!==name),ls);loadFoto()}
+
+// VIDEO
+async function addVideo(){const inp=document.getElementById('yt');const id=getYTId(inp.value.trim());const s=document.getElementById('sVideo');if(!id){s.innerText='❌ Link tidak valid';return}try{s.innerText='Menyimpan...';const {data,sha}=await getJson('videos.json');if(data.includes(id)){s.innerText='Sudah ada!';return}data.push(id);await saveJson('videos.json',data,sha);inp.value='';s.innerText='✅ Video ditambahkan!';loadVideo()}catch(e){s.innerText='❌ '+e.message}}
+async function loadVideo(){const {data}=await getJson('videos.json');document.getElementById('videoList').innerHTML=data.length?data.map(id=>`<div style="margin:6px 0">https://youtu.be/${id} <button onclick="delVideo('${id}')">Hapus</button></div>`).join(''):'<i>Belum ada video</i>'}
+async function delVideo(id){if(!confirm('Hapus video?'))return;const {data,sha}=await getJson('videos.json');await saveJson('videos.json',data.filter(x=>x!==id),sha);loadVideo()}
+loadFoto();loadVideo();
 </script></body></html>
