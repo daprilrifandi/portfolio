@@ -7,26 +7,39 @@
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#fafafa;color:#222}
     header{text-align:center;padding:50px 20px 20px}
    .gallery{column-count:4;column-gap:16px;max-width:1200px;margin:auto;padding:20px}
-   .item{break-inside:avoid;margin-bottom:16px}
-   .item img{width:100%;height:auto;display:block;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+   .item{break-inside:avoid;margin-bottom:16px;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);background:#fff}
+   .item img{width:100%;display:block}
+   .item iframe{width:100%;aspect-ratio:16/9;border:0;display:block;background:#000}
     @media(max-width:900px){.gallery{column-count:3}} @media(max-width:600px){.gallery{column-count:2;padding:12px}}
    .kontak{text-align:center;padding:50px 20px;background:#fff;margin-top:30px}
    .btn{display:inline-block;margin:6px;padding:12px 20px;background:#f1f1f1;border-radius:10px;text-decoration:none;color:#000;font-weight:500}
   </style>
 </head>
 <body>
-  <header><h1>Portofolio Rifandi Dapril</h1><p>Selamat datang di portofolio saya</p></header>
+  <header><h1>Portofolio Rifandi Dapril</h1><p>Foto & Video campur acak tiap refresh</p></header>
   <div id="gallery" class="gallery"></div>
   <script>
-  fetch('https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/list.json?t='+Date.now())
-  .then(r=>r.json())
-  .then(imgs=>{
-      for(let i=imgs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[imgs[i],imgs[j]]=[imgs[j],imgs[i]]}
-      const g=document.getElementById('gallery');
-      imgs.forEach(n=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${n}" loading="lazy">`;g.appendChild(d);});
+  async function load(){
+    const t='?t='+Date.now();
+    const [imgs, vids] = await Promise.all([
+      fetch('https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/list.json'+t).then(r=>r.json()).catch(()=>[]),
+      fetch('https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/videos.json'+t).then(r=>r.json()).catch(()=>[])
+    ]);
+    let items=[];
+    imgs.forEach(n=>{ if(n!=='list.json'&&n!=='videos.json') items.push({type:'img',src:n}) });
+    vids.forEach(id=> items.push({type:'yt',id:id}));
+    // ACAK SEMUA
+    for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]]}
+    const g=document.getElementById('gallery');
+    items.forEach(it=>{
+      const d=document.createElement('div');d.className='item';
+      if(it.type==='img'){d.innerHTML=`<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${it.src}" loading="lazy">`}
+      else{d.innerHTML=`<iframe src="https://www.youtube.com/embed/${it.id}?rel=0&modestbranding=1" loading="lazy" allowfullscreen></iframe>`}
+      g.appendChild(d);
     });
+  }load();
   </script>
-  <section class="kontak"><h2>Hubungi Saya</h2><p>Tertarik kerja sama?</p>
+  <section class="kontak"><h2>Hubungi Saya</h2>
     <a href="https://wa.me/6285748316870" class="btn">Chat WhatsApp</a>
     <a href="https://instagram.com/omkumisjahat" class="btn">Follow Instagram</a>
     <a href="mailto:daprilrifandi@gmail.com" class="btn">Kirim Email</a>
