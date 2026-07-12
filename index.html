@@ -1,62 +1,35 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portofolio Rifandi Dapril</title>
   <style>
-    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fafafa; color:#222; }
-    header { text-align:center; padding:50px 20px 20px; }
-    h1 { margin:0; font-size:2.2rem; }
-    p { color:#555; }
-    .gallery { column-count:4; column-gap:16px; max-width:1200px; margin:auto; padding:20px; }
-    .item { break-inside:avoid; margin-bottom:16px; }
-    .item img { width:100%; height:auto; display:block; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform .2s; }
-    .item img:hover { transform:scale(1.02); }
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#fafafa;color:#222}
+    header{text-align:center;padding:50px 20px 20px}
+   .gallery{column-count:4;column-gap:16px;max-width:1200px;margin:auto;padding:20px}
+   .item{break-inside:avoid;margin-bottom:16px}
+   .item img{width:100%;height:auto;display:block;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
     @media(max-width:900px){.gallery{column-count:3}} @media(max-width:600px){.gallery{column-count:2;padding:12px}}
-    .kontak { text-align:center; padding:50px 20px; background:white; margin-top:30px; }
-    .tombol-sosmed .btn { display:inline-block; margin:6px; padding:12px 20px; text-decoration:none; border-radius:10px; background:#f1f1f1; color:#000; font-weight:500; }
+   .kontak{text-align:center;padding:50px 20px;background:#fff;margin-top:30px}
+   .btn{display:inline-block;margin:6px;padding:12px 20px;background:#f1f1f1;border-radius:10px;text-decoration:none;color:#000;font-weight:500}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Portofolio Rifandi Dapril</h1>
-    <p>Selamat datang di portofolio saya</p>
-  </header>
-
+  <header><h1>Portofolio Rifandi Dapril</h1><p>Selamat datang di portofolio saya</p></header>
   <div id="gallery" class="gallery"></div>
-
   <script>
-  fetch('https://api.github.com/repos/daprilrifandi/portfolio/contents/media')
-    .then(r => r.json())
-    .then(files => {
-      const g = document.getElementById('gallery');
-      // ambil hanya gambar
-      let imgs = files.filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name));
-
-      // === INI KUNCINYA: ACAK SETIAP REFRESH ===
-      for (let i = imgs.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [imgs[i], imgs[j]] = [imgs[j], imgs[i]];
-      }
-
-      imgs.forEach(f => {
-        const d = document.createElement('div');
-        d.className = 'item';
-        d.innerHTML = `<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${f.name}" alt="${f.name}" loading="lazy">`;
-        g.appendChild(d);
-      });
+  fetch('https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/list.json?t='+Date.now())
+  .then(r=>r.json())
+  .then(imgs=>{
+      for(let i=imgs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[imgs[i],imgs[j]]=[imgs[j],imgs[i]]}
+      const g=document.getElementById('gallery');
+      imgs.forEach(n=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${n}" loading="lazy">`;g.appendChild(d);});
     });
   </script>
-
-  <section class="kontak">
-    <h2>Hubungi Saya</h2>
-    <p>Tertarik kerja sama? Klik tombol di bawah ya!</p>
-    <div class="tombol-sosmed">
-      <a href="https://wa.me/6285748316870" target="_blank" class="btn wa">Chat WhatsApp</a>
-      <a href="https://instagram.com/omkumisjahat" target="_blank" class="btn ig">Follow Instagram</a>
-      <a href="mailto:daprilrifandi@gmail.com" class="btn email">Kirim Email</a>
-    </div>
+  <section class="kontak"><h2>Hubungi Saya</h2><p>Tertarik kerja sama?</p>
+    <a href="https://wa.me/6285748316870" class="btn">Chat WhatsApp</a>
+    <a href="https://instagram.com/omkumisjahat" class="btn">Follow Instagram</a>
+    <a href="mailto:daprilrifandi@gmail.com" class="btn">Kirim Email</a>
   </section>
 </body>
 </html>
