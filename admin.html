@@ -1,61 +1,17 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Admin Rahasia</title></head><body>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin Rahasia</title></head><body>
 <script>if(!location.search.includes("kunci=rifandi123")){document.body.innerHTML="<h1>404</h1>";throw 0}</script>
-
 <h2>Upload Foto</h2>
 <input type="file" id="f" accept="image/*"> <button onclick="up()">Upload</button>
-<div id="s" style="margin:8px 0;color:blue"></div>
-<hr><h2>Daftar Foto (klik hapus)</h2>
-<div id="list">Loading...</div>
-
+<div id="s" style="margin:8px 0;color:blue"></div><hr>
+<h2>Daftar Foto</h2><div id="list">Loading...</div>
 <script>
-const owner='daprilrifandi', repo='portfolio', path='media';
-let token = localStorage.getItem('gh_pat');
-if(!token){ token = prompt('Tempel PAT GitHub kamu:'); localStorage.setItem('gh_pat',token); }
-
-function toBase64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result.split(',')[1]);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
-}
-
-async function up(){
-  const file=document.getElementById('f').files[0];
-  if(!file) return alert('Pilih file dulu');
-  const s=document.getElementById('s');
-  try{
-    s.innerText='Siapkan file...';
-    const b64=await toBase64(file);
-    s.innerText='Uploading ke GitHub...';
-    const nama='foto'+Date.now()+'.'+file.name.split('.').pop();
-    const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/${nama}`,{
-      method:'PUT',
-      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({message:'upload '+nama, content:b64})
-    });
-    if(!r.ok){ const e=await r.json(); throw new Error(e.message); }
-    s.innerText='✅ Berhasil! Tunggu 30 detik lalu refresh portfolio.';
-    loadList();
-  }catch(e){
-    s.innerText='❌ GAGAL: '+e.message;
-    s.style.color='red';
-  }
-}
-
-async function loadList(){
-  const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}});
-  const files=await r.json();
-  document.getElementById('list').innerHTML=files.filter(f=>/\.(jpg|jpeg|png|webp)$/i.test(f.name)).map(f=>`<div>${f.name} <button onclick="del('${f.path}','${f.sha}')">Hapus</button></div>`).join('');
-}
-async function del(p,sha){
-  if(!confirm('Hapus?'))return;
-  await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}`,{
-    method:'DELETE',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({message:'delete '+p, sha})
-  });
-  loadList();
-}
+const owner='daprilrifandi',repo='portfolio',path='media';
+let token=localStorage.getItem('gh_pat');if(!token){token=prompt('Tempel PAT GitHub:');localStorage.setItem('gh_pat',token)}
+const toB64=f=>new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result.split(',')[1]);rd.readAsDataURL(f)});
+async function getList(){try{const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/list.json`,{headers:{Authorization:'Bearer '+token}});if(!r.ok)return{list:[],sha:null};const j=await r.json();return{list:JSON.parse(atob(j.content)),sha:j.sha}}catch{return{list:[],sha:null}}}
+async function saveList(list,sha){const body={message:'update list',content:btoa(JSON.stringify(list))};if(sha)body.sha=sha;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/list.json`,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)})}
+async function up(){const file=document.getElementById('f').files[0];if(!file)return alert('Pilih file');const s=document.getElementById('s');try{s.innerText='Uploading...';const b64=await toB64(file);const nama='foto'+Date.now()+'.'+file.name.split('.').pop();let r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}/${nama}`,{method:'PUT',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'upload '+nama,content:b64})});if(!r.ok)throw new Error((await r.json()).message);const {list,sha}=await getList();list.push(nama);await saveList(list,sha);s.innerText='✅ Berhasil! Foto baru sudah masuk list acak.';loadList()}catch(e){s.innerText='❌ '+e.message;s.style.color='red'}}
+async function loadList(){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}});const files=await r.json();document.getElementById('list').innerHTML=files.filter(f=>/\.(jpg|jpeg|png|webp)$/i.test(f.name)).map(f=>`<div>${f.name} <button onclick="del('${f.path}','${f.sha}','${f.name}')">Hapus</button></div>`).join('')}
+async function del(p,sha,name){if(!confirm('Hapus '+name+'?'))return;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}`,{method:'DELETE',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({message:'delete '+name,sha})});const {list,sha:ls}=await getList();await saveList(list.filter(x=>x!==name),ls);loadList()}
 loadList();
 </script></body></html>
