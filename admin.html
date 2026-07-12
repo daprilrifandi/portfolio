@@ -1,23 +1,39 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin</title>
-<style>body{font-family:sans-serif;padding:20px;max-width:700px}.box{background:#f6f6f7;padding:16px;border-radius:12px;margin-bottom:18px}input[type=text]{width:340px;padding:8px}button{padding:6px 12px;margin-left:6px}</style>
-</head><body>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin Otomatis</title><style>body{font-family:sans-serif;padding:20px;max-width:720px}.box{background:#f5f5f7;padding:16px;border-radius:12px;margin-bottom:16px}input{width:340px;padding:8px}button{padding:7px 12px;margin-left:6px;cursor:pointer}</style></head><body>
 <script>if(!location.search.includes("kunci=rifandi123")){document.body.innerHTML="404";throw 0}</script>
-<div class="box"><h2>1. Upload Foto</h2><input type="file" id="f" accept="image/*"> <button onclick="upFoto()">Upload</button><div id="sF"></div></div>
-<div class="box"><h2>2. Tambah Video YouTube</h2><input type="text" id="yt" placeholder="paste https://youtu.be/..."> <button onclick="addVideo()">Tambah Video</button><div id="sV"></div><div id="vList" style="margin-top:12px"></div></div>
-<hr><h3>Daftar Foto</h3><div id="fList"></div>
+
+<div class="box">
+<h3>1. Upload Foto</h3>
+<input type="file" id="f" accept="image/*">
+<button onclick="upF()">Upload Foto</button>
+<div id="sF" style="margin-top:8px;color:blue"></div>
+</div>
+
+<div class="box">
+<h3>2. Tambah Video YouTube</h3>
+<input id="v" type="text" placeholder="paste link https://youtu.be/...">
+<button onclick="addV()">Tambah Video</button>
+<div id="sV" style="margin-top:8px;color:blue"></div>
+<div id="vL" style="margin-top:10px"></div>
+</div>
+
+<hr>
+<h3>Daftar Foto (klik hapus)</h3>
+<div id="fL">Loading...</div>
+
 <script>
-const owner='daprilrifandi',repo='portfolio',base='media';let token=localStorage.getItem('gh_pat');if(!token){token=prompt('PAT:');localStorage.setItem('gh_pat',token)}
+const owner='daprilrifandi',repo='portfolio',folder='media';
+let token=localStorage.getItem('gh_pat');if(!token){token=prompt('Tempel PAT GitHub kamu:');localStorage.setItem('gh_pat',token)}
 const toB64=f=>new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result.split(',')[1]);rd.readAsDataURL(f)});
-function b64dec(s){return JSON.parse(decodeURIComponent(escape(atob(s.replace(/\s/g,'')))))}
-function b64enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
-async function getJson(n){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}/${n}`,{headers:{Authorization:'Bearer '+token}});if(!r.ok)return{data:[],sha:null};const j=await r.json();try{return{data:b64dec(j.content),sha:j.sha}}catch{return{data:JSON.parse(atob(j.content.replace(/\s/g,''))),sha:j.sha}}}
-async function saveJson(n,d,sha){const body={message:'update '+n,content:b64enc(d)};if(sha)body.sha=sha;const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}/${n}`,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error((await r.json()).message)}
-function ytId(u){const m=u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);return m?m[1]:(u.length===11?u:null)}
-async function upFoto(){const f=document.getElementById('f').files[0];if(!f)return;const s=document.getElementById('sF');s.innerText='upload...';const b=await toB64(f);const nm='foto'+Date.now()+'.'+f.name.split('.').pop();let r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}/${nm}`,{method:'PUT',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'add '+nm,content:b})});if(!r.ok){s.innerText='gagal';return}const {data,sha}=await getJson('list.json');data.push(nm);await saveJson('list.json',data,sha);s.innerText='✅ ok';loadF()}
-async function loadF(){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${base}`,{headers:{Authorization:'Bearer '+token}});const a=await r.json();document.getElementById('fList').innerHTML=a.filter(x=>/\.(jpg|jpeg|png|webp)$/i.test(x.name)).map(x=>`${x.name} <button onclick="delF('${x.path}','${x.sha}','${x.name}')">Hapus</button>`).join('<br>')}
-async function delF(p,sha,n){if(!confirm('hapus'))return;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}`,{method:'DELETE',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'del',sha})});const {data,sha:s}=await getJson('list.json');await saveJson('list.json',data.filter(x=>x!==n),s);loadF()}
-async function addVideo(){const i=document.getElementById('yt');const id=ytId(i.value.trim());const s=document.getElementById('sV');if(!id){s.innerText='❌ link salah, pakai link video bukan channel';return}s.innerText='simpan...';const {data,sha}=await getJson('videos.json');if(data.includes(id)){s.innerText='sudah ada';return}data.push(id);await saveJson('videos.json',data,sha);i.value='';s.innerText='✅ video masuk!';loadV()}
-async function loadV(){const {data}=await getJson('videos.json');document.getElementById('vList').innerHTML=data.length?data.map(id=>`<div>https://youtu.be/${id} <button onclick="delV('${id}')">Hapus</button></div>`).join(''):'<i>Belum ada video</i>'}
-async function delV(id){if(!confirm('hapus video?'))return;const {data,sha}=await getJson('videos.json');await saveJson('videos.json',data.filter(x=>x!==id),sha);loadV()}
-loadF();loadV();
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/\s/g,''))))));
+async function getJSON(nama){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/${nama}`,{headers:{Authorization:'Bearer '+token}});if(!r.ok)return{data:nama==='videos.json'?[]:[],sha:null};const j=await r.json();return{data:dec(j.content),sha:j.sha}}
+async function saveJSON(nama,data,sha){const body={message:'auto update '+nama,content:enc(data)};if(sha)body.sha=sha;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/${nama}`,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)})}
+function ambilIdYT(url){const m=url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);return m?m[1]:(url.length===11?url:null)}
+
+async function upF(){const file=document.getElementById('f').files[0];if(!file)return alert('pilih foto dulu');document.getElementById('sF').innerText='lagi upload...';const b64=await toB64(file);const namaBaru='foto'+Date.now()+'.'+file.name.split('.').pop();await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/${namaBaru}`,{method:'PUT',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'upload '+namaBaru,content:b64})});const {data,sha}=await getJSON('list.json');data.push(namaBaru);await saveJSON('list.json',[...new Set(data)],sha);document.getElementById('sF').innerText='✅ Beres! Foto otomatis masuk ke halaman utama (tunggu 1 menit)';loadAll()}
+async function hapusFoto(path,sha,nama){if(!confirm('hapus '+nama+'?'))return;await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{method:'DELETE',headers:{Authorization:'Bearer '+token},body:JSON.stringify({message:'hapus '+nama,sha})});const {data,sha:sh}=await getJSON('list.json');await saveJSON('list.json',data.filter(x=>x!==nama),sh);loadAll()}
+async function addV(){const id=ambilIdYT(document.getElementById('v').value.trim());const s=document.getElementById('sV');if(!id){s.innerText='❌ Link harus link VIDEO YouTube ya, bukan channel';return}s.innerText='menyimpan...';const {data,sha}=await getJSON('videos.json');const list=data.map(x=>typeof x==='string'?{type:'yt',id:x}:x);if(list.find(x=>x.id===id)){s.innerText='video sudah ada';return}list.push({type:'yt',id});await saveJSON('videos.json',list,sha);document.getElementById('v').value='';s.innerText='✅ Video masuk otomatis!';loadAll()}
+async function hapusVideo(id){if(!confirm('hapus video?'))return;const {data,sha}=await getJSON('videos.json');const list=data.map(x=>typeof x==='string'?{type:'yt',id:x}:x);await saveJSON('videos.json',list.filter(x=>x.id!==id),sha);loadAll()}
+async function loadAll(){const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}`,{headers:{Authorization:'Bearer '+token}});const files=await r.json();document.getElementById('fL').innerHTML=files.filter(f=>/\.jpg|\.jpeg|\.png|\.webp/i.test(f.name)).map(f=>`${f.name} <button onclick="hapusFoto('${f.path}','${f.sha}','${f.name}')">Hapus</button>`).join('<br>');const {data}=await getJSON('videos.json');const list=data.map(x=>typeof x==='string'?{type:'yt',id:x}:x);document.getElementById('vL').innerHTML=list.length?list.map(x=>`https://youtu.be/${x.id} <button onclick="hapusVideo('${x.id}')">Hapus</button>`).join('<br>'):'Belum ada video';}
+loadAll();
 </script></body></html>
