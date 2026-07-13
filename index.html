@@ -1,37 +1,79 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Portofolio Rifandi Dapril</title>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portofolio Rifandi Dapril</title>
 <style>
- body{margin:0;font-family:-apple-system,sans-serif;background:#fafafa}
- header{text-align:center;padding:50px 20px 20px}
-.gallery{column-count:4;column-gap:16px;max-width:1200px;margin:auto;padding:20px}
-.item{break-inside:avoid;margin-bottom:16px;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:transform.35s ease, box-shadow.35s ease; cursor:pointer}
-.item:hover{transform:scale(1.05);box-shadow:0 14px 28px rgba(0,0,0,.18);z-index:5}
-.item img{width:100%;display:block}
-.item iframe{width:100%;aspect-ratio:16/9;border:0;display:block;pointer-events:none}
-.item:hover iframe{pointer-events:auto}
- @media(max-width:900px){.gallery{column-count:3}}@media(max-width:600px){.gallery{column-count:2}}
-.kontak{text-align:center;padding:50px 20px;background:#fff;margin-top:30px}
-.btn{display:inline-block;margin:6px;padding:12px 20px;background:#f1f1f1;border-radius:10px;text-decoration:none;color:#000}
-</style></head><body>
-<header><h1>Portofolio Rifandi Dapril</h1><p>Foto & Video campur acak</p></header>
-<div id="gallery" class="gallery"></div>
+:root{--bg:#fbfbfc;--card:#fff;--text:#111;--muted:#888}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto;background:var(--bg);color:var(--text)}
+header{padding:56px 20px 20px;text-align:center}
+h1{font-size:clamp(28px,4vw,42px);margin:0 0 8px;letter-spacing:-.02em} p.sub{color:var(--muted);margin:0}
+.masonry{columns:2 300px;column-gap:18px;max-width:1200px;margin:28px auto;padding:0 18px}
+@media(min-width:900px){.masonry{columns:4 280px}}
+.item{break-inside:avoid;margin:0 0 18px;border-radius:18px;overflow:hidden;background:var(--card);box-shadow:0 8px 30px rgba(0,0,0,.06);position:relative}
+.item img{width:100%;display:block;height:auto}
+.item .yt-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.item .yt-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:4px 8px;border-radius:999px;backdrop-filter:blur(6px)}
+</style>
+</head>
+<body>
+<header>
+<h1>Portofolio Rifandi Dapril</h1>
+<p class="sub">Foto & Video campur acak</p>
+</header>
+<div id="grid" class="masonry"></div>
 <script>
-async function load(){
- const t='?t='+Date.now();
- const [imgs,vids]=await Promise.all([
-  fetch('https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/list.json'+t).then(r=>r.json()).catch(()=>[]),
-  fetch('https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/videos.json'+t).then(r=>r.json()).catch(()=>[])
- ]);
- let items=[];imgs.forEach(n=>{if(n!=='list.json'&&n!=='videos.json')items.push({t:'img',v:n})});vids.forEach(id=>items.push({t:'yt',v:id}));
- for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]]}
- const g=document.getElementById('gallery');
- items.forEach(it=>{const d=document.createElement('div');d.className='item';
-  if(it.t==='img')d.innerHTML=`<img src="https://raw.githubusercontent.com/daprilrifandi/portfolio/main/media/${it.v}" loading="lazy">`;
-  else d.innerHTML=`<iframe src="https://www.youtube.com/embed/${it.v}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>`;
-  g.appendChild(d);});
-}load();
+async function loadJSON(path){
+ try{
+  const r=await fetch(path+'?v='+Date.now(),{cache:'no-store'});
+  if(!r.ok) return [];
+  const j=await r.json();
+  return Array.isArray(j)?j:[];
+ }catch{return []}
+}
+function normVideos(data){
+ return data.map(v=>{
+   if(typeof v==='string') return v.trim();
+   if(v && typeof v==='object') return (v.id||v.url||'').toString().trim();
+   return '';
+ }).map(id=>{
+   const m=id.match(/([A-Za-z0-9_-]{11})/);
+   return m?m[1]:id;
+ }).filter(id=>/^[A-Za-z0-9_-]{11}$/.test(id));
+}
+function normPhotos(data){
+ return data.map(p=>{
+   if(typeof p==='string') return p;
+   if(p && typeof p==='object') return p.url||p.src||'';
+   return '';
+ }).filter(Boolean);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a;}
+
+(async()=>{
+ const [rawPhotos, rawVideos]=await Promise.all([loadJSON('media/photos.json'), loadJSON('media/videos.json')]);
+ const photos=normPhotos(rawPhotos);
+ const videos=normVideos(rawVideos);
+ const items=[];
+ photos.forEach(url=>{
+   const abs=url.startsWith('http')?url:(url.startsWith('media/')?'./'+url:url);
+   items.push({type:'photo',url:abs});
+ });
+ videos.forEach(id=>{items.push({type:'video',id})});
+ shuffle(items);
+ const grid=document.getElementById('grid');
+ if(items.length===0){grid.innerHTML='<p style="text-align:center;color:#888;grid-column:1/-1">Belum ada karya. Tambah dari Admin.</p>';return;}
+ items.forEach(it=>{
+  const el=document.createElement('div'); el.className='item';
+  if(it.type==='photo'){
+   el.innerHTML=`<img loading="lazy" src="${it.url}" onerror="this.style.display='none'">`;
+  }else{
+   el.innerHTML=`<div class="yt-wrap"><iframe loading="lazy" src="https://www.youtube.com/embed/${it.id}?rel=0&modestbranding=1&playsinline=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><span class="badge">YouTube</span></div>`;
+  }
+  grid.appendChild(el);
+ });
+})();
 </script>
-<section class="kontak"><h2>Hubungi Saya</h2>
-<a href="https://wa.me/6285748316870" class="btn">Chat WhatsApp</a>
-<a href="https://instagram.com/omkumisjahat" class="btn">Follow Instagram</a>
-<a href="mailto:daprilrifandi@gmail.com" class="btn">Kirim Email</a>
-</section></body></html>
+</body>
+</html>
