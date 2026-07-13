@@ -1,26 +1,77 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admin Otomatis</title><style>body{font-family:sans-serif;padding:20px;max-width:720px}.box{background:#f5f5f7;padding:16px;border-radius:12px;margin-bottom:16px}button{padding:7px 12px;cursor:pointer}.err{background:#ffe0e0;padding:10px;border-radius:8px;margin:10px 0;color:#a00;display:none}</style></head><body>
-<script>if(!location.search.includes("kunci=rifandi123")){document.body.innerHTML="404";throw 0}</script>
-<div id="err" class="err"></div>
-<button onclick="resetToken()" style="float:right">Reset Token / Ganti PAT</button>
-<div class="box"><h3>1. Upload Foto</h3><input type="file" id="f" accept="image/*"><button onclick="upF()">Upload Foto</button><div id="sF"></div></div>
-<div class="box"><h3>2. Tambah Video YouTube</h3><input id="v" type="text" style="width:340px;padding:8px" placeholder="https://youtu.be/..."><button onclick="addV()">Tambah</button><div id="sV"></div><div id="vL"></div></div>
-<hr><h3>Daftar Foto</h3><div id="fL">Loading...</div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Otomatis - Fix</title>
+<style>
+body{font-family:system-ui;background:#f6f6f7;padding:20px;max-width:720px;margin:auto}
+.card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:20px}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:8px 0}
+button{padding:10px 16px;border:0;border-radius:10px;font-weight:600;cursor:pointer}
+.btn{background:#111;color:#fff}.btn-del{background:#ffe0e0;color:#a00;margin-left:8px}
+.item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
+.thumb{width:120px;height:68px;background:#000;border-radius:8px;object-fit:cover}
+small{color:#888}
+</style>
+</head>
+<body>
+<h2>Admin Portfolio - Rifandi (Fixed)</h2>
+<div class="card">
+<h3>1. Daftar Video Saat Ini</h3>
+<div id="list">Loading...</div>
+<small>Format baru: array string ID 11 huruf, kompatibel dengan halaman utama kamu.</small>
+</div>
+<div class="card">
+<h3>2. Tambah Video YouTube</h3>
+<input id="url" placeholder="https://www.youtube.com/watch?v=JD0W2RYtv58">
+<button class="btn" id="add">Tambah</button>
+<div id="msg" style="margin-top:10px"></div>
+</div>
 <script>
-const owner='daprilrifandi',repo='portfolio',folder='media';
-function getToken(){let t=localStorage.getItem('gh_pat');if(!t){t=prompt('Tempel PAT baru ghp_... :');if(t){localStorage.setItem('gh_pat',t);return t}throw new Error('Batal')}return t}
-function resetToken(){localStorage.removeItem('gh_pat');alert('Token dihapus, refresh halaman dan tempel PAT baru');location.reload()}
-function showErr(m){const e=document.getElementById('err');e.style.display='block';e.innerHTML=m+' <button onclick="resetToken()">Reset Token</button>'}
-const toB64=f=>new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result.split(',')[1]);rd.readAsDataURL(f)});
-const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
-const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/\s/g,'')))));
-async function gh(path,opt={}){const t=getToken();const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{...opt,headers:{...(opt.headers||{}),Authorization:`token ${t}`,Accept:'application/vnd.github.v3+json'}});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||r.statusText)}return r.json()}
-async function getJSON(n){try{const j=await gh(`${folder}/${n}`);return{data:dec(j.content),sha:j.sha}}catch(e){if(e.message.includes('404'))return{data:n==='videos.json'?[]:[],sha:null};throw e}}
-async function saveJSON(n,d,sh){const b={message:'auto '+n,content:enc(d)};if(sh)b.sha=sh;const t=getToken();await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/${n}`,{method:'PUT',headers:{Authorization:`token ${t}`,'Content-Type':'application/json'},body:JSON.stringify(b)})}
-function yt(u){const m=u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);return m?m[1]:(u.length===11?u:null)}
-async function upF(){try{const file=document.getElementById('f').files[0];if(!file)return;document.getElementById('sF').innerText='upload...';const b64=await toB64(file);const nm='foto'+Date.now()+'.'+file.name.split('.').pop();const t=getToken();await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}/${nm}`,{method:'PUT',headers:{Authorization:`token ${t}`},body:JSON.stringify({message:'add '+nm,content:b64})});const {data,sha}=await getJSON('list.json');data.push(nm);await saveJSON('list.json',[...new Set(data)],sha);document.getElementById('sF').innerText='✅ Beres!';loadAll()}catch(e){showErr('Upload gagal: '+e.message)}}
-async function hapusFoto(path,sha,nama){if(!confirm('hapus '+nama+'?'))return;try{const t=getToken();await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{method:'DELETE',headers:{Authorization:`token ${t}`},body:JSON.stringify({message:'del '+nama,sha})});const {data,sha:sh}=await getJSON('list.json');await saveJSON('list.json',data.filter(x=>x!==nama),sh);loadAll()}catch(e){showErr(e.message)}}
-async function addV(){try{const id=yt(document.getElementById('v').value.trim());if(!id){document.getElementById('sV').innerText='Link harus video YouTube';return}const {data,sha}=await getJSON('videos.json');const list=data.map(x=>typeof x==='string'?{type:'yt',id:x}:x);if(list.find(x=>x.id===id))return;list.push({type:'yt',id});await saveJSON('videos.json',list,sha);document.getElementById('v').value='';loadAll()}catch(e){showErr(e.message)}}
-async function hapusVideo(id){try{const {data,sha}=await getJSON('videos.json');const list=data.map(x=>typeof x==='string'?{type:'yt',id:x}:x);await saveJSON('videos.json',list.filter(x=>x.id!==id),sha);loadAll()}catch(e){showErr(e.message)}}
-async function loadAll(){try{const t=getToken();const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}`,{headers:{Authorization:`token ${t}`}});if(!r.ok)throw new Error('Gagal baca media: '+(await r.json()).message);const files=await r.json();document.getElementById('fL').innerHTML=files.filter(f=>/\.jpg|\.jpeg|\.png|\.webp/i.test(f.name)).map(f=>`${f.name} <button onclick="hapusFoto('${f.path}','${f.sha}','${f.name}')">Hapus</button>`).join('<br>')||'Kosong';const {data}=await getJSON('videos.json');const list=data.map(x=>typeof x==='string'?{type:'yt',id:x}:x);document.getElementById('vL').innerHTML=list.map(x=>`https://youtu.be/${x.id} <button onclick="hapusVideo('${x.id}')">Hapus</button>`).join('<br>');document.getElementById('err').style.display='none';}catch(e){document.getElementById('fL').innerHTML='Gagal load';showErr('Error: '+e.message+' — Klik Reset Token');}}
-loadAll();
-</script></body></html>
+const OWNER='daprilrifandi', REPO='portfolio', BRANCH='main', PATH='media/videos.json';
+const TOKEN_KEY='gh_token'; const KUNCI='rifandi123';
+const q=new URLSearchParams(location.search); if(q.get('kunci')!==KUNCI){document.body.innerHTML='<h3>Kunci salah. Tambahkan ?kunci=rifandi123</h3>'; throw '';}
+function getToken(){let t=localStorage.getItem(TOKEN_KEY); if(!t){t=prompt('Paste GitHub Token (ghp_...) sekali aja:'); if(t){localStorage.setItem(TOKEN_KEY,t.trim())}} return t?.trim()}
+function yt(u){const m=u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null}
+async function gh(path, method='GET', body, token){
+ const url=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}${method==='GET'?'?ref='+BRANCH:''}`;
+ const r=await fetch(url,{method,headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+ if(!r.ok) throw new Error(await r.text()); return r.json();
+}
+async function load(){
+ const token=getToken(); if(!token) return;
+ try{
+  const j=await gh(PATH,'GET',null,token);
+  const data=JSON.parse(atob(j.content.replace(/\n/g,'')));
+  // normalisasi: bisa string atau object
+  const ids=(Array.isArray(data)?data:[]).map(v=> typeof v==='string'?v : (v.id||v.url||'')).filter(Boolean);
+  const div=document.getElementById('list'); div.innerHTML='';
+  if(ids.length===0) div.innerHTML='<small>Belum ada video</small>';
+  ids.forEach((id,i)=>{
+    const row=document.createElement('div'); row.className='item';
+    row.innerHTML=`<div style="display:flex;gap:12px;align-items:center"><img class="thumb" src="https://img.youtube.com/vi/${id}/mqdefault.jpg"><div><b>${id}</b><br><small>youtube.com/watch?v=${id}</small></div></div><button class="btn-del">Hapus</button>`;
+    row.querySelector('button').onclick=async()=>{
+      if(!confirm('Hapus '+id+'?')) return;
+      const newIds=ids.filter((_,idx)=>idx!==i);
+      await save(newIds, j.sha);
+    };
+    div.appendChild(row);
+  });
+  window._sha=j.sha; window._ids=ids;
+ }catch(e){ document.getElementById('list').innerHTML='<small>videos.json belum ada / kosong. Tambah baru aja.</small>'; window._sha=null; window._ids=[]; }
+}
+async function save(ids, sha){
+ const token=getToken(); const content=btoa(unescape(encodeURIComponent(JSON.stringify(ids,null,2))));
+ const body={message:`update videos via admin fix`, content, branch:BRANCH}; if(sha) body.sha=sha;
+ await gh(PATH,'PUT',body,token); document.getElementById('msg').textContent='Berhasil! Tunggu 2 menit lalu refresh halaman utama ?v=baru'; setTimeout(load,1000);
+}
+document.getElementById('add').onclick=async()=>{
+ const u=document.getElementById('url').value.trim(); const id=yt(u);
+ if(!id){alert('Link YouTube tidak valid. Pakai link dengan v= 11 huruf'); return;}
+ const ids=window._ids||[]; if(ids.includes(id)){alert('Video sudah ada'); return;}
+ ids.unshift(id); await save(ids, window._sha);
+};
+load();
+</script>
+</body>
+</html>
