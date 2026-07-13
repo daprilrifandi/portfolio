@@ -2,14 +2,13 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Portfolio - Lengkap Fixed</title>
+<title>Admin Portfolio - FINAL FIX 409</title>
 <style>
 body{font-family:system-ui,-apple-system;background:#f6f6f7;padding:18px;max-width:820px;margin:auto}
 .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.06);margin-bottom:20px}
-h2{margin:0 0 10px} h3{margin:0 0 12px}
-input,button{font:inherit}
-input[type=text],input[type=file]{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px;margin:8px 0;box-sizing:border-box}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px;margin:8px 0;box-sizing:border-box}
 .btn{padding:10px 16px;border:0;border-radius:12px;font-weight:700;cursor:pointer;background:#111;color:#fff}
+.btn:disabled{opacity:.5}
 .btn-del{background:#ffe3e3;color:#b00020;padding:6px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
 .item{position:relative;border:1px solid #eee;border-radius:12px;overflow:hidden;background:#fafafa}
@@ -22,7 +21,7 @@ small{color:#888}
 </style>
 </head>
 <body>
-<h2>Admin Portofolio - Rifandi (Lengkap)</h2>
+<h2>Admin Portofolio - Rifandi (FINAL)</h2>
 
 <div class="card">
 <h3>1. Foto Saat Ini</h3>
@@ -33,7 +32,7 @@ small{color:#888}
 <h3>2. Tambah Foto Baru</h3>
 <input type="file" id="photoFile" accept="image/*">
 <button class="btn" id="photoAdd">Upload Foto</button>
-<div id="photoMsg" style="margin-top:10px"><small>Pilih foto > Upload. Otomatis masuk ke halaman utama 2 menit kemudian.</small></div>
+<div id="photoMsg"><small>Pilih foto > Upload. Gak perlu refresh manual, SHA auto-reload.</small></div>
 </div>
 
 <div class="card">
@@ -45,103 +44,113 @@ small{color:#888}
 <h3>4. Tambah Video YouTube</h3>
 <input type="text" id="ytUrl" placeholder="https://www.youtube.com/watch?v=JD0W2RYtv58">
 <button class="btn" id="ytAdd">Tambah Video</button>
-<div id="ytMsg" style="margin-top:10px"></div>
+<div id="ytMsg"></div>
 </div>
 
 <script>
 const OWNER='daprilrifandi', REPO='portfolio', BRANCH='main';
 const PHOTOS_JSON='media/photos.json', VIDEOS_JSON='media/videos.json';
 const TOKEN_KEY='gh_token', KUNCI='rifandi123';
-const qs=new URLSearchParams(location.search); if(qs.get('kunci')!==KUNCI){document.body.innerHTML='<h3 style="padding:40px">Kunci salah. Buka dengan ?kunci=rifandi123</h3>'; throw '';}
+const qs=new URLSearchParams(location.search); if(qs.get('kunci')!==KUNCI){document.body.innerHTML='<h3>Kunci salah ?kunci=rifandi123</h3>'; throw '';}
 
-function getToken(){let t=localStorage.getItem(TOKEN_KEY); if(!t){t=prompt('Paste GitHub Token (ghp_...) sekali aja:'); if(t) localStorage.setItem(TOKEN_KEY,t.trim())} return t?.trim()}
+function getToken(){let t=localStorage.getItem(TOKEN_KEY); if(!t){t=prompt('Paste GitHub Token ghp_... sekali aja:'); if(t) localStorage.setItem(TOKEN_KEY,t.trim())} return t?.trim()}
 function ytId(u){const m=u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);return m?m[1]:null}
 async function gh(path, method='GET', body, token){
  const url=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}${method==='GET'?'?ref='+BRANCH:''}`;
  const r=await fetch(url,{method,headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
  if(!r.ok){const t=await r.text(); throw new Error(t)} return r.json();
 }
-function b64Encode(str){return btoa(unescape(encodeURIComponent(str)))}
+function b64Encode(s){return btoa(unescape(encodeURIComponent(s)))}
 function b64Decode(b){return decodeURIComponent(escape(atob(b.replace(/\n/g,''))))}
 
-// PHOTOS
+// --- PHOTOS ---
+async function getLatestJson(path, token){
+ try{const j=await gh(path,'GET',null,token); return {sha:j.sha, data:JSON.parse(b64Decode(j.content))}}catch{return {sha:null,data:[]}}
+}
 async function loadPhotos(){
  const token=getToken(); if(!token) return;
- try{
-  const j=await gh(PHOTOS_JSON,'GET',null,token);
-  const arr=JSON.parse(b64Decode(j.content));
-  const list=Array.isArray(arr)?arr:[];
-  const grid=document.getElementById('photoGrid'); grid.innerHTML='';
-  if(list.length===0) grid.innerHTML='<small>Belum ada foto</small>';
-  list.forEach((it,idx)=>{
-    const url=typeof it==='string'?it:(it.url||it.src||'');
-    const div=document.createElement('div'); div.className='item';
-    div.innerHTML=`<img src="${url.startsWith('http')?url:'https://daprilrifandi.github.io/portfolio/'+url}"><div class="meta"><small>${idx+1}</small><button class="btn-del">Hapus</button></div>`;
-    div.querySelector('button').onclick=async()=>{
-      if(!confirm('Hapus foto ini?')) return;
-      const newList=list.filter((_,i)=>i!==idx);
-      await savePhotos(newList, j.sha);
-    };
-    grid.appendChild(div);
-  });
-  window._photoSha=j.sha; window._photoList=list;
- }catch(e){document.getElementById('photoGrid').innerHTML='<small>photos.json belum ada, upload foto pertama untuk membuat.</small>'; window._photoSha=null; window._photoList=[];}
+ const {data}=await getLatestJson(PHOTOS_JSON, token);
+ const list=Array.isArray(data)?data:[];
+ const grid=document.getElementById('photoGrid'); grid.innerHTML='';
+ if(list.length===0) grid.innerHTML='<small>Belum ada foto</small>';
+ list.forEach((it,idx)=>{
+   const url=typeof it==='string'?it:(it.url||it.src||'');
+   const abs=url.startsWith('http')?url:'https://daprilrifandi.github.io/portfolio/'+url.replace(/^\.\//,'');
+   const div=document.createElement('div'); div.className='item';
+   div.innerHTML=`<img src="${abs}"><div class="meta"><small>${idx+1}</small><button class="btn-del">Hapus</button></div>`;
+   div.querySelector('button').onclick=async()=>{
+     if(!confirm('Hapus foto ini?')) return;
+     const token=getToken();
+     const {sha, data:cur}=await getLatestJson(PHOTOS_JSON, token);
+     const newList=(Array.isArray(cur)?cur:[]).filter((_,i)=>i!==idx);
+     await savePhotosFinal(newList, sha);
+   };
+   grid.appendChild(div);
+ });
+ window._photoList=list;
 }
-async function savePhotos(list, sha){
- const token=getToken(); const content=b64Encode(JSON.stringify(list,null,2));
- const body={message:'update photos.json via admin lengkap',content,branch:BRANCH}; if(sha) body.sha=sha;
- await gh(PHOTOS_JSON,'PUT',body,token); document.getElementById('photoMsg').textContent='Berhasil! Tunggu 2 menit lalu refresh halaman utama ?v=baru'; loadPhotos();
+async function savePhotosFinal(list, knownSha){
+ const token=getToken();
+ // SELALU ambil sha terbaru sebelum PUT untuk hindari 409
+ let sha=knownSha;
+ try{const j=await gh(PHOTOS_JSON,'GET',null,token); sha=j.sha;}catch{sha=null}
+ const content=b64Encode(JSON.stringify(list,null,2));
+ const body={message:'update photos.json final',content,branch:BRANCH}; if(sha) body.sha=sha;
+ await gh(PHOTOS_JSON,'PUT',body,token);
+ document.getElementById('photoMsg').textContent='Berhasil! Tunggu 2 menit lalu refresh halaman utama ?v=baru';
+ loadPhotos();
 }
 document.getElementById('photoAdd').onclick=async()=>{
  const file=document.getElementById('photoFile').files[0]; if(!file){alert('Pilih foto dulu');return;}
- const token=getToken(); if(!token) return;
- document.getElementById('photoMsg').textContent='Uploading...';
- const reader=new FileReader();
- reader.onload=async()=>{
-   try{
-    const base64=reader.result.split(',')[1];
-    const safeName=file.name.replace(/[^a-zA-Z0-9.\-_]/g,'-');
-    const fname=`${Date.now()}-${safeName}`;
-    const path=`media/photos/${fname}`;
-    await gh(path,'PUT',{message:`upload ${fname}`,content:base64,branch:BRANCH},token);
-    // update json
-    let list=window._photoList||[]; let sha=window._photoSha;
-    // reload sha if null (file might not exist)
-    if(!sha){ try{const j=await gh(PHOTOS_JSON,'GET',null,token); sha=j.sha; list=JSON.parse(b64Decode(j.content));}catch{}}
-    const newUrl=`media/photos/${fname}`;
-    list.unshift(newUrl);
-    await savePhotos(list, sha);
-   }catch(err){alert('Gagal upload: '+err.message); document.getElementById('photoMsg').textContent='Gagal: '+err.message}
- };
- reader.readAsDataURL(file);
+ const token=getToken(); const btn=document.getElementById('photoAdd'); btn.disabled=true;
+ document.getElementById('photoMsg').textContent='Uploading foto...';
+ try{
+   const base64=await new Promise(res=>{const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.readAsDataURL(file);});
+   const safe=file.name.replace(/[^a-zA-Z0-9.\-_]/g,'-'); const fname=`${Date.now()}-${safe}`;
+   const path=`media/photos/${fname}`;
+   await gh(path,'PUT',{message:`upload ${fname}`,content:base64,branch:BRANCH},token);
+   // ambil list terbaru SETELAH upload image (karena HEAD sudah maju)
+   const {sha, data}=await getLatestJson(PHOTOS_JSON, token);
+   const list=Array.isArray(data)?data:[]; list.unshift(`media/photos/${fname}`);
+   await savePhotosFinal(list, sha);
+ }catch(e){alert('Gagal: '+e.message); document.getElementById('photoMsg').textContent='Gagal: '+e.message}
+ btn.disabled=false;
 };
 
-// VIDEOS
+// --- VIDEOS ---
 async function loadVideos(){
- const token=getToken(); if(!token) return;
- try{
-  const j=await gh(VIDEOS_JSON,'GET',null,token);
-  const data=JSON.parse(b64Decode(j.content));
-  const ids=(Array.isArray(data)?data:[]).map(v=>typeof v==='string'?v:(v.id||v.url||'')).filter(Boolean);
-  const div=document.getElementById('videoList'); div.innerHTML='';
-  if(ids.length===0) div.innerHTML='<small>Belum ada video</small>';
-  ids.forEach((id,i)=>{
-    const row=document.createElement('div'); row.className='vitem';
-    row.innerHTML=`<img class="vthumb" src="https://img.youtube.com/vi/${id}/mqdefault.jpg"><div style="flex:1"><b>${id}</b><br><small>youtube.com/watch?v=${id}</small></div><button class="btn-del">Hapus</button>`;
-    row.querySelector('button').onclick=async()=>{ if(!confirm('Hapus '+id+'?')) return; const n=ids.filter((_,ix)=>ix!==i); await saveVideos(n,j.sha); };
-    div.appendChild(row);
-  });
-  window._videoSha=j.sha; window._videoIds=ids;
- }catch(e){document.getElementById('videoList').innerHTML='<small>videos.json kosong</small>'; window._videoSha=null; window._videoIds=[];}
+ const token=getToken();
+ const {data}=await getLatestJson(VIDEOS_JSON, token);
+ const ids=(Array.isArray(data)?data:[]).map(v=>typeof v==='string'?v:(v.id||'')).filter(Boolean);
+ const div=document.getElementById('videoList'); div.innerHTML='';
+ if(ids.length===0) div.innerHTML='<small>Belum ada video</small>';
+ ids.forEach((id,i)=>{
+   const row=document.createElement('div'); row.className='vitem';
+   row.innerHTML=`<img class="vthumb" src="https://img.youtube.com/vi/${id}/mqdefault.jpg"><div style="flex:1"><b>${id}</b><br><small>youtube.com/watch?v=${id}</small></div><button class="btn-del">Hapus</button>`;
+   row.querySelector('button').onclick=async()=>{
+     if(!confirm('Hapus '+id+'?')) return;
+     const {sha, data:cur}=await getLatestJson(VIDEOS_JSON, token);
+     const curIds=(Array.isArray(cur)?cur:[]).map(v=>typeof v==='string'?v:(v.id||'')).filter(Boolean);
+     const newIds=curIds.filter((_,ix)=>ix!==i);
+     await saveVideosFinal(newIds, sha);
+   };
+   div.appendChild(row);
+ });
 }
-async function saveVideos(ids, sha){
- const token=getToken(); const content=b64Encode(JSON.stringify(ids,null,2));
- const body={message:'update videos.json via admin lengkap',content,branch:BRANCH}; if(sha) body.sha=sha;
- await gh(VIDEOS_JSON,'PUT',body,token); document.getElementById('ytMsg').textContent='Berhasil! Tunggu 2 menit lalu refresh halaman utama'; loadVideos();
+async function saveVideosFinal(ids, knownSha){
+ const token=getToken(); let sha=knownSha;
+ try{const j=await gh(VIDEOS_JSON,'GET',null,token); sha=j.sha;}catch{sha=null}
+ const content=b64Encode(JSON.stringify(ids,null,2));
+ const body={message:'update videos.json final',content,branch:BRANCH}; if(sha) body.sha=sha;
+ await gh(VIDEOS_JSON,'PUT',body,token);
+ document.getElementById('ytMsg').textContent='Berhasil! Tunggu 2 menit';
+ loadVideos();
 }
 document.getElementById('ytAdd').onclick=async()=>{
- const u=document.getElementById('ytUrl').value.trim(); const id=ytId(u); if(!id){alert('Link tidak valid. Harus ada v= dengan 11 huruf');return;}
- const ids=window._videoIds||[]; if(ids.includes(id)){alert('Sudah ada');return;} ids.unshift(id); await saveVideos(ids, window._videoSha);
+ const u=document.getElementById('ytUrl').value.trim(); const id=ytId(u); if(!id){alert('Link tidak valid');return;}
+ const token=getToken(); const {sha, data}=await getLatestJson(VIDEOS_JSON, token);
+ const ids=(Array.isArray(data)?data:[]).map(v=>typeof v==='string'?v:(v.id||'')).filter(Boolean);
+ if(ids.includes(id)){alert('Sudah ada');return;} ids.unshift(id); await saveVideosFinal(ids, sha);
 };
 
 loadPhotos(); loadVideos();
